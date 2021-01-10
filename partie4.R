@@ -53,14 +53,14 @@ initial.state_age <- c(SE = N*(1-v0)*m0/(m0+c0), SA = N*(1-v0)*c0/(m0+c0), IE = 
 # SIRvimm
 # Équilibre sans virus
 VE0_Vimm <- v0*m0*N/(m0+c0+mu0)
-VA0_Vimm <- c0*VE0/(m0+mu0)
-SE0_Vimm <- ((1-v0)*m0*N + mu0*VE0)/(m0+c0)
-SA0_Vimm <- (c0*SE0 + mu0*VA0)/m0
+VA0_Vimm <- c0*VE0_Vimm/(m0+mu0)
+SE0_Vimm <- ((1-v0)*m0*N + mu0*VE0_Vimm)/(m0+c0)
+SA0_Vimm <- (c0*SE0_Vimm + mu0*VA0_Vimm)/m0
 # Condition initiale
-initial.state_Vimm <- c(VE = VE0, VA = VA0, SE = SE0-1, SA = SA0-1, IE = 1, IA = 1, RE = 0, RA = 0)
+initial.state_Vimm <- c(VE = VE0_Vimm, VA = VA0_Vimm, SE = SE0_Vimm-1, SA = SA0_Vimm-1, IE = 1, IA = 1, RE = 0, RA = 0)
 
 # On simule les solutions de nos équations
-times <- seq(0, 200, by = 0.01)
+times <- seq(0, 200, by = 0.1)
 out_age <- ode(y = initial.state_age, times = times, func = SIRage, parms = parameters_age)
 out_Vimm <- ode(y = initial.state_Vimm, times = times, func = SIRvimm, parms = parameters_Vimm)
 
@@ -85,10 +85,9 @@ RAvimm = out_Vimm[,"RA"]
 tvimm = out_Vimm[,"time"] 
 
 # On trace les solutions
-plot(out_Vimm)
+par(mfrow=c(3,5), mar=c(2,2,1,1))
+plot(out_age, mfrow = NULL, mfcol = NULL, mar = NULL)
+plot(out_Vimm, mfrow = NULL, mfcol = NULL)
 
-par(mfrow=c(1,1))
-d = length(t)-10000
-d = 0
-plot(t[d:length(t)], RA[d:length(t)], type = "l")
-abline(h=0, col = 2)
+
+
