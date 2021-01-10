@@ -2,12 +2,12 @@ library(deSolve) # importation de la librarie diferential equation Solve
 library(phaseR)
 
 rm(list = ls()) # Ré-initialisation de toutes les variables
-
+#mIA <- matrix(data = NA, nrow = 11, ncol = 2)
 # Parametres du modèles
 N = 1000000 # popultation 
 c0 = 1/18 # gama passage à l'âge adulte 18ans 
 m0 = 1/80 # taux de mortalité/natalité, essperance de vie de 80ans
-v0 = 0.8 # couverture vaccinale de 80%
+v0 = 0.7 # couverture vaccinale de 80%
 mu0 = 1/10 # durée de l'immunité vaccinale 10ans
 
 # Modèle avec Enfants-Adultes
@@ -24,7 +24,7 @@ SIRage <-function(t, state, parameters) {
 
 
 # Modèle avec immunité vaccinale
-SIRvimm <-function(t, state, parameters) { 
+SIRVage <-function(t, state, parameters) { 
   with(as.list(c(state, parameters)),{
     
     dVEdt <- v*m*N - m*VE - c*VE - (mu - beta*(IE+IA))*VE
@@ -42,14 +42,14 @@ SIRvimm <-function(t, state, parameters) {
 # Paramètres d'entrée du modèle 
 # SIRage
 parameters_age <- c(beta = 6.5*(52/3)/N, b = m0, m =m0, g=52/3-1/80, v = v0, c = c0)
-# SIRvimm
+# SIRVage
 parameters_Vimm <- c(beta = 6.5*(52/3)/N, b = m0, m =m0, g=52/3-1/80, v = v0, c = c0, mu = mu0)
 
 
 # Conditions initiales 
 # SIRage
 initial.state_age <- c(SE = N*(1-v0)*m0/(m0+c0), SA = N*(1-v0)*c0/(m0+c0), IE = 1, IA = 1, RE = N*v0*m0/(m0+c0), RA = N*v0*c0/(m0+c0))
-# SIRvimm
+# SIRVage
 # Équilibre sans virus
 VE0_Vimm <- v0*m0*N/(m0+c0+mu0)
 VA0_Vimm <- c0*VE0_Vimm/(m0+mu0)
@@ -59,9 +59,9 @@ SA0_Vimm <- (c0*SE0_Vimm + mu0*VA0_Vimm)/m0
 initial.state_Vimm <- c(VE = VE0_Vimm, VA = VA0_Vimm, SE = SE0_Vimm-1, SA = SA0_Vimm-1, IE = 1, IA = 1, RE = 0, RA = 0)
 
 # On simule les solutions de nos équations
-times <- seq(0, 200, by = 0.01)
-out_age <- ode(y = initial.state_age, times = times, func = SIRage, parms = parameters_age, method = 'adam')
-out_Vimm <- ode(y = initial.state_Vimm, times = times, func = SIRvimm, parms = parameters_Vimm, method = 'adam')
+times <- seq(0, 300, by = 0.1)
+out_age <- ode(y = initial.state_age, times = times, func = SIRage, parms = parameters_age, method = "ode45")
+out_Vimm <- ode(y = initial.state_Vimm, times = times, func = SIRVage, parms = parameters_Vimm, method = "lsodes")
 
 # On récupère les variables
 # SIRage
@@ -72,7 +72,7 @@ IAage = out_age[,"IA"]
 REage = out_age[,"RE"] 
 RAage = out_age[,"RA"]
 tage = out_age[,"time"] 
-# SIRvimm
+# SIRVage
 VEvimm = out_Vimm[,"VE"]
 VAvimm = out_Vimm[,"VA"]
 SEvimm = out_Vimm[,"SE"] 
@@ -88,8 +88,7 @@ par(mfrow=c(3,5), mar=c(2,2,1,1))
 plot(out_age, mfrow = NULL, mfcol = NULL, mar = NULL)
 plot(out_Vimm, mfrow = NULL, mfcol = NULL)
 
-
-# Solution de SIRage et SIRvimm sur un même graphique
+# Solution de SIRage et SIRVage sur un même graphique
 t <- out_age[,1]
 out_df <- data.frame(t, VEvimm, VAvimm, SEage, SEvimm, SAage, SAvimm, IEage, IEvimm, IAage, IAvimm, REage, REvimm, RAage, RAvimm)
 
@@ -121,30 +120,55 @@ brnY <- c(m,M)
 plot(t, p1, 'l', col = 'black', ylim = brnY, ylab = "IA")
 lines(t, p2, 'l', col = 'red')
 legend("topright", legend = c('age','v imm'), col = c('black', 'red'), lty = c(1, 1))
-
+# on peut observer une plus haure valeure de IA pour le modèle avec immunité vaccinale limitée
 
 # IA en fonction de la couverture vaccinale 
 Vvec=seq(from = 0, to = 1, by = 0.05)
-
 IAvec = matrix(0,21,1)
 
+methods = c("lsoda", "lsode", "lsodes","lsodar","vode", "daspk", "euler", "rk4", "ode23", "ode45", "radau", "bdf", "bdf_d", "adams", "impAdams", "impAdams_d")
+used_meth = c()
+
 for (k in 1:length(Vvec)){ 
-  v0=Vvec[k]
-  parameters <- c(beta = 6.5*(52/3)/N, b = m0, m =m0, g=52/3-1/80, v = v0, c = c0) 
-  initial.state <- c(SE = N*(1-v0)*m0/(m0+c0), SA = N*(1-v0)*c0/(m0+c0),IE = 1, IA = 1, RE = N*v0*m0/(m0+c0), RA = N*v0*c0/(m0+c0)) 
-  times <- seq(0, 1000, by = 0.01) 
-  out <- ode(y = initial.state, times = times, func = SIRage, parms = parameters) 
-  SE = out[,"SE"] 
-  SA = out[,"SA"] 
-  IE = out[,"IE"] 
-  IA = out[,"IA"] 
-  RE = out[,"RE"] 
-  RA = out[,"RA"] 
-  t = out[,"time"] 
-  IAvec[k]= IA[length(IA)]
+  vi=Vvec[k]
+  parameters_Vimm_i <- c(beta = 6.5*(52/3)/N, b = m0, m =m0, g=52/3-1/80, v = vi, c = c0, mu = mu0)
+  # Équilibre sans virus
+  VE0_Vimm_i <- vi*m0*N/(m0+c0+mu0)
+  VA0_Vimm_i <- c0*VE0_Vimm_i/(m0+mu0)
+  SE0_Vimm_i <- ((1-vi)*m0*N + mu0*VE0_Vimm_i)/(m0+c0)
+  SA0_Vimm_i <- (c0*SE0_Vimm_i + mu0*VA0_Vimm_i)/m0
+  # Condition initiale
+  initial.state_Vimm_i <- c(VE = VE0_Vimm_i, VA = VA0_Vimm_i, SE = SE0_Vimm_i-1, SA = SA0_Vimm_i-1, IE = 1, IA = 1, RE = 0, RA = 0)
+  times <- seq(0, 500, by = 0.1)
+  
+  # beaucoups de problèmes avec les différentes méthodes de résolution pour la fonction ode
+  # on teste donc les différentes méthodes jusqu'à avoir une valeur de IA supperieure à 0 
+  for (meth in methods) {
+    out <- ode(y = initial.state_Vimm_i, times = times, func = SIRVage, parms = parameters_Vimm_i, method = meth)
+    #SE = out[,"SE"] 
+    #SA = out[,"SA"] 
+    #IE = out[,"IE"] 
+    IA = out[,"IA"]  
+    #RE = out[,"RE"] 
+    #RA = out[,"RA"] 
+    #t = out[,"time"] 
+    IAvec[k]= max(IA[length(IA)],0)
+    if (IAvec[k] > 10 && !is.nan(IAvec[k])) {
+      used_meth <- c(used_meth, meth) # on récupère les méthodes ayant fonctionné 
+      break
+    }
+  }
 }
 
 # On trace pour finir comment le rapport IA/N dépend de v:
 par(mfrow=c(1,1))
-plot(Vvec,IAvec/N, type = "l")
-plot(Vvec,(IAvec/N)/(1-Vvec), type = "l")
+plot(Vvec,IAvec/N, type = "l") # fraction de la pop dans IA en fonction de la couverture vaccinale 
+plot(Vvec,(IAvec/N)/(1-Vvec), type = "l") # fraction de la pop non vaccinée dans IA en fonction de la couverture vaccinale 
+used_meth
+
+# la fraction de la pop dans IA augmente avec la couvereture vaccinale -> il ne faudrait donc pas vacciner ??? C'est louche ! 
+# il y a peut-être un pb dans la conception du modèle 
+# dans SIRV sans les classes d'âge on a bien une décroissance de I avec l'augmentation de la couverture vaccinale
+# est-ce que lorqu'on vaccine à la naissance on reste immunisé pendant l'enfance puis BIM! quand on est adulte on est baisé ???
+# plot IE/N et (IA+IE)/N
+# comparer à SIRage 
