@@ -7,7 +7,7 @@ rm(list = ls()) # Ré-initialisation de toutes les variables
 N = 1000000 # popultation 
 c0 = 1/18 # gama passage à l'âge adulte 18ans 
 m0 = 1/80 # taux de mortalité/natalité, essperance de vie de 80ans
-v0 = 0.80 # couverture vaccinale de 80%
+v0 = 0.8 # couverture vaccinale de 80%
 mu0 = 1/10 # durée de l'immunité vaccinale 10ans
 
 # Modèle avec Enfants-Adultes
@@ -35,7 +35,6 @@ SIRvimm <-function(t, state, parameters) {
     dIAdt <- c*IE + beta*SA*(IE+IA) - m*IA - g*IA 
     dREdt <- g*IE - m*RE - c*RE 
     dRAdt <- g*IA + c*RE - m*RA 
-    
     list(c(dVEdt, dVAdt, dSEdt, dSAdt, dIEdt, dIAdt, dREdt, dRAdt)) })
 }
 
@@ -90,4 +89,36 @@ plot(out_age, mfrow = NULL, mfcol = NULL, mar = NULL)
 plot(out_Vimm, mfrow = NULL, mfcol = NULL)
 
 
+# Solution de SIRage et SIRvimm sur un même graphique
+t <- out_age[,1]
+out_df <- data.frame(t, VEvimm, VAvimm, SEage, SEvimm, SAage, SAvimm, IEage, IEvimm, IAage, IAvimm, REage, REvimm, RAage, RAvimm)
+
+out_names <- names(out_df)
+par(mfrow = c(2,3),mar=c(4,4,1,1))
+t_end <- length(t)
+for (i in seq(4, (length(out_names)-1), by = 2)) {
+  i1 <- i
+  i2 <- i+1
+  p1 <- out_df[,i1]
+  p2 <- out_df[,i2]
+  M <- max(p1,p2)
+  m <- max(min(p1,p2),0)
+  brnY <- c(m,M)
+  name <- out_names[i]
+  plot(t, p1, 'l', col = 'black', ylim = brnY, ylab = name)
+  lines(t, p2, 'l', col = 'red')
+  
+}
+legend("bottomright", legend = c('age','v imm'), col = c('black', 'red'), lty = c(1, 1))
+
+# Zoom sur IA
+par(mfrow=c(1,1), mar=c(4,4,1,1))
+p1 <- out_df[,"IAage"]
+p2 <- out_df[, "IAvimm"]
+M <- 10000
+m <- max(min(p1,p2),0)
+brnY <- c(m,M)
+plot(t, p1, 'l', col = 'black', ylim = brnY, ylab = "IA")
+lines(t, p2, 'l', col = 'red')
+legend("topright", legend = c('age','v imm'), col = c('black', 'red'), lty = c(1, 1))
 
