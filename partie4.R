@@ -59,9 +59,9 @@ SA0_Vimm <- (c0*SE0_Vimm + mu0*VA0_Vimm)/m0
 initial.state_Vimm <- c(VE = VE0_Vimm, VA = VA0_Vimm, SE = SE0_Vimm-1, SA = SA0_Vimm-1, IE = 1, IA = 1, RE = 0, RA = 0)
 
 # On simule les solutions de nos équations
-times <- seq(0, 200, by = 0.1)
-out_age <- ode(y = initial.state_age, times = times, func = SIRage, parms = parameters_age)
-out_Vimm <- ode(y = initial.state_Vimm, times = times, func = SIRvimm, parms = parameters_Vimm)
+times <- seq(0, 200, by = 0.01)
+out_age <- ode(y = initial.state_age, times = times, func = SIRage, parms = parameters_age, method = 'adam')
+out_Vimm <- ode(y = initial.state_Vimm, times = times, func = SIRvimm, parms = parameters_Vimm, method = 'adam')
 
 # On récupère les variables
 # SIRage
@@ -122,3 +122,29 @@ plot(t, p1, 'l', col = 'black', ylim = brnY, ylab = "IA")
 lines(t, p2, 'l', col = 'red')
 legend("topright", legend = c('age','v imm'), col = c('black', 'red'), lty = c(1, 1))
 
+
+# IA en fonction de la couverture vaccinale 
+Vvec=seq(from = 0, to = 1, by = 0.05)
+
+IAvec = matrix(0,21,1)
+
+for (k in 1:length(Vvec)){ 
+  v0=Vvec[k]
+  parameters <- c(beta = 6.5*(52/3)/N, b = m0, m =m0, g=52/3-1/80, v = v0, c = c0) 
+  initial.state <- c(SE = N*(1-v0)*m0/(m0+c0), SA = N*(1-v0)*c0/(m0+c0),IE = 1, IA = 1, RE = N*v0*m0/(m0+c0), RA = N*v0*c0/(m0+c0)) 
+  times <- seq(0, 1000, by = 0.01) 
+  out <- ode(y = initial.state, times = times, func = SIRage, parms = parameters) 
+  SE = out[,"SE"] 
+  SA = out[,"SA"] 
+  IE = out[,"IE"] 
+  IA = out[,"IA"] 
+  RE = out[,"RE"] 
+  RA = out[,"RA"] 
+  t = out[,"time"] 
+  IAvec[k]= IA[length(IA)]
+}
+
+# On trace pour finir comment le rapport IA/N dépend de v:
+par(mfrow=c(1,1))
+plot(Vvec,IAvec/N, type = "l")
+plot(Vvec,(IAvec/N)/(1-Vvec), type = "l")
