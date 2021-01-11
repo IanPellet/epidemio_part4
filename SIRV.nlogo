@@ -43,11 +43,11 @@ end
 
 to get-healthy ;; turtle procedure
   set sick? false
-  set remaining-recovered0
+  set remaining-recovered 0
   set sick-time 0
 end
 
-to recovered ;; turtle procedure
+to become-recovered ;; turtle procedure
   set sick? false
   set sick-time 0
   set remaining-recovered recovered-duration
@@ -82,7 +82,7 @@ end
 to update-display
   ask turtles
     [ if shape != turtle-shape [ set shape turtle-shape ]
-      set color ifelse-value sick? [ red ] [ ifelse-value recovered? [ grey ] [ green ] ] ]
+      set color ifelse-value sick? [ red ] [ ifelse-value recovered? [ blue] [ green ] ] ]
 end
 
 ;;Turtle counting variables are advanced.
@@ -263,10 +263,10 @@ true
 true
 "" ""
 PENS
-"sick" 1.0 0 -2674135 true "" "plot count turtles with [ sick? ]"
-"immune" 1.0 0 -7500403 true "" "plot count turtles with [ immune? ]"
-"healthy" 1.0 0 -10899396 true "" "plot count turtles with [ not sick? and not immune? ]"
-"total" 1.0 0 -13345367 true "" "plot count turtles"
+"Susceptible" 1.0 0 -13840069 true "" "plot count turtles with [ not sick? and not recovered? ]"
+"Infectious" 1.0 0 -2674135 true "" "plot count turtles with [ sick? ]"
+"Recovered" 1.0 0 -13791810 true "" "plot count turtles with [ recovered? ]"
+"Total" 1.0 0 -1264960 true "" "plot count turtles"
 
 SLIDER
 40
@@ -297,10 +297,10 @@ NIL
 MONITOR
 105
 328
-179
+195
 373
 NIL
-%immune
+%recovered
 1
 1
 11
