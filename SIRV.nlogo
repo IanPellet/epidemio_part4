@@ -12,6 +12,7 @@ globals
     %vaccinated          ;; what % of the population is vaccinated
     lifespan             ;; the lifespan of a turtle
     chance-reproduce     ;; the probability of a turtle generating an offspring each tick
+    chance-vaccinated
     carrying-capacity    ;; the number of turtles that can be in the world at one time
     recovered-duration   ;; how many weeks immunity lasts
     vaccine-duration      ;; how many weeks vaccine lasts
@@ -38,10 +39,10 @@ to setup-turtles
       set vaccinated-time 0
       set size 1.5  ;; easier to see
       get-healthy ]
-  ask n-of 10 turtles
+  ask n-of 20 turtles
     [ get-sick ]
   ask n-of 10 turtles
-    [ get-vaccine ]
+    [ get-vaccine]
 end
 
 to get-sick ;; turtle procedure
@@ -51,6 +52,7 @@ end
 
 to get-healthy ;; turtle procedure
   set sick? false
+  set vaccinated? false
   set remaining-recovered 0
   set sick-time 0
 end
@@ -75,6 +77,7 @@ to setup-constants
   set carrying-capacity 300
   set chance-reproduce 1
   set recovered-duration 52
+  set chance-vaccinated 10
   set vaccine-duration 10 * 52  ;; 10 times 52 weeks = 10 years = 520 weeks old
 end
 
@@ -86,7 +89,7 @@ to go
       [ recover-or-die ]
     ifelse sick?
       [ infect ] [ reproduce ]
-    if vaccinated-time = vaccine-duration
+    if vaccinated-time > vaccine-duration
       [get-healthy]
   ]
   update-global-variables
@@ -138,9 +141,10 @@ end
 ;; If a turtle is sick, it infects other turtles on the same patch.
 ;; Immune turtles don't get sick.
 to infect ;; turtle procedure
-  ask other turtles-here with [ not sick? and not recovered? and  vaccinated? = false]
-    [ if random-float 100 < infectiousness
-      [ get-sick ] ]
+  ask other turtles-here with [vaccinated? = false][
+    ask other turtles-here with [ not sick? and not recovered?]
+      [ if random-float 100 < infectiousness
+        [ get-sick ] ]]
 end
 
 ;; Once the turtle has been sick long enough, it
@@ -222,7 +226,7 @@ chance-recover
 chance-recover
 0.0
 99.0
-25.0
+13.0
 1.0
 1
 %
@@ -237,7 +241,7 @@ infectiousness
 infectiousness
 0.0
 99.0
-90.0
+77.0
 1.0
 1
 %
@@ -296,7 +300,7 @@ PENS
 "Susceptible" 1.0 0 -13840069 true "" "plot count turtles with [ not sick? and not recovered? ]"
 "Infectious" 1.0 0 -2674135 true "" "plot count turtles with [ sick? ]"
 "Recovered" 1.0 0 -13791810 true "" "plot count turtles with [ recovered? ]"
-"Vaccinated" 1.0 0 -12895429 true "" "plot count turtles with [ vaccinated? = true ]"
+"Vaccinated" 1.0 0 -1184463 true "" "plot count turtles with [ vaccinated? = true ]"
 "Total" 1.0 0 -1664597 true "" "plot count turtles"
 
 SLIDER
@@ -308,7 +312,7 @@ number-people
 number-people
 10
 carrying-capacity
-125.0
+123.0
 1
 1
 NIL
