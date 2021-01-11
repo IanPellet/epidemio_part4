@@ -42,9 +42,9 @@ to setup-turtles
       set size 1.5  ;; easier to see
       set still-sick-chance 1
       get-healthy ]
-  ask n-of 10 turtles
+  ask n-of sick-people turtles
     [ get-sick ]
-  ask n-of 10 turtles
+  ask n-of vaccinated-people turtles
     [ get-vaccine]
 end
 
@@ -182,13 +182,13 @@ to startup
 end
 @#$#@#$#@
 GRAPHICS-WINDOW
-305
-15
-1167
-514
+465
+80
+1357
+647
 -1
 -1
-14.0
+13.61
 1
 10
 1
@@ -198,10 +198,10 @@ GRAPHICS-WINDOW
 1
 1
 1
--30
-30
--17
-17
+-32
+32
+-20
+20
 1
 1
 1
@@ -209,10 +209,10 @@ ticks
 45.0
 
 SLIDER
-40
-155
-234
-188
+20
+150
+225
+183
 duration
 duration
 0.0
@@ -224,40 +224,40 @@ weeks
 HORIZONTAL
 
 SLIDER
-40
-121
-234
-154
+240
+20
+434
+53
 chance-recover
 chance-recover
 0.0
 99.0
-99.0
+97.0
 1.0
 1
 %
 HORIZONTAL
 
 SLIDER
-40
-87
-234
-120
+240
+60
+430
+93
 infectiousness
 infectiousness
 0.0
 99.0
-99.0
+98.0
 1.0
 1
 %
 HORIZONTAL
 
 BUTTON
-62
-48
-132
-83
+480
+24
+550
+59
 NIL
 setup
 NIL
@@ -271,10 +271,10 @@ NIL
 1
 
 BUTTON
-138
-48
-209
-84
+556
+24
+627
+60
 NIL
 go
 T
@@ -289,8 +289,8 @@ NIL
 
 PLOT
 15
-485
-267
+304
+445
 649
 Populations
 weeks
@@ -310,10 +310,10 @@ PENS
 "Total" 1.0 0 -1664597 true "" "plot count turtles"
 
 SLIDER
-40
-10
-234
-43
+20
+18
+225
+51
 number-people
 number-people
 10
@@ -325,10 +325,10 @@ NIL
 HORIZONTAL
 
 MONITOR
-15
-420
-100
-465
+840
+19
+925
+64
 NIL
 %infected
 1
@@ -336,10 +336,10 @@ NIL
 11
 
 MONITOR
-120
-420
-210
-465
+935
+19
+1025
+64
 years
 ticks / 52
 1
@@ -347,10 +347,10 @@ ticks / 52
 11
 
 MONITOR
-15
-370
-100
-415
+645
+19
+730
+64
 NIL
 %recovered
 1
@@ -358,10 +358,10 @@ NIL
 11
 
 MONITOR
-120
-370
-212
-415
+740
+19
+832
+64
 %vaccinated
 %vaccinated
 5
@@ -369,25 +369,40 @@ MONITOR
 11
 
 CHOOSER
-40
-290
-235
-335
+20
+200
+225
+245
 turtle-shape
 turtle-shape
 "person" "circle"
 0
 
 SLIDER
-45
-205
-292
-238
-number-vaccinated-people
-number-vaccinated-people
+20
+105
+225
+138
+vaccinated-people
+vaccinated-people
 0
-number-people
-66.0
+100
+84.0
+1
+1
+NIL
+HORIZONTAL
+
+SLIDER
+20
+60
+225
+93
+sick-people
+sick-people
+0
+100
+89.0
 1
 1
 NIL
