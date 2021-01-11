@@ -11,14 +11,10 @@ SIRV <- function(t, x, parameters)
   g <- parameters[4]
   mu <- parameters[5]
   
-  N <- (x[1]+x[2]+x[3]+x[4]) 
-  
   S <- x[1]
   I <- x[2]
   R <- x[3]
   V <- x[4]
-  N <- S+I+R+V
-  
   
   dSdt <- (1-v)*m*N + (mu-beta*I)*V -m*S -beta*S*I # equation de S
   dIdt <- beta*S*I-m*I-g*I # equation de I
@@ -32,7 +28,7 @@ N = 1e06
 
 m = 1/80 # esperance de vie 80ans
 v = 0.8 # taux de vaccination 
-g = 52/3 # durée de l'infection 3semaines 
+g = 52/3 # durée de l'infection 3semaines
 mu = 1/10
 
 beta = 6.5*(m+g)/N
