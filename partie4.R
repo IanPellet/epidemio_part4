@@ -38,6 +38,7 @@ SIRVage <-function(t, state, parameters) {
     list(c(dVEdt, dVAdt, dSEdt, dSAdt, dIEdt, dIAdt, dREdt, dRAdt)) })
 }
 
+# même modèle, pour vérifier d'éventuelles fautes de frappe
 SIRVage2 <- function(t, x, parameters)
 {
   m <- parameters[1] 
@@ -175,12 +176,17 @@ legend("topright", legend = c('age','v imm'), col = c('black', 'red'), lty = c(1
 # IA en fonction de la couverture vaccinale SIRVage
 Vvec=seq(from = 0, to = 1, by = 0.05)
 IAvec = matrix(0,21,1)
+IEvec = matrix(0,21,1)
+Ivec = matrix(0,21,1)
+
+# mu0 <- 1/30 # test avec différentes durrées d'immunité vaccinale
 
 methods = c("lsoda", "lsode", "lsodes","lsodar","vode", "daspk", "euler", "rk4", "ode23", "ode45", "radau", "bdf", "bdf_d", "adams", "impAdams", "impAdams_d")
 used_meth = c()
 
 for (k in 1:length(Vvec)){ 
   vi=Vvec[k]
+  
   parameters_Vimm_i <- c(beta = 6.5*(52/3)/N, b = m0, m =m0, g=52/3-1/80, v = vi, c = c0, mu = mu0)
   
   # Équilibre sans virus
@@ -198,13 +204,15 @@ for (k in 1:length(Vvec)){
     out <- ode(y = initial.state_Vimm_i, times = times, func = SIRVage, parms = parameters_Vimm_i, method = meth)
     #SE = out[,"SE"] 
     #SA = out[,"SA"] 
-    #IE = out[,"IE"] 
+    IE = out[,"IE"] 
     IA = out[,"IA"]  
     #RE = out[,"RE"] 
     #RA = out[,"RA"] 
     #t = out[,"time"] 
 
     IAvec[k]= max(IA[length(IA)],0)
+    IEvec[k]= max(IE[length(IE)],0)
+    Ivec[k] = IAvec[k] + IEvec[k]
     if (IAvec[k] > 10 && !is.nan(IAvec[k])) {
       used_meth <- c(used_meth, meth) # on récupère les méthodes ayant fonctionné 
       break
@@ -214,16 +222,34 @@ for (k in 1:length(Vvec)){
 
 # On trace pour finir comment le rapport IA/N dépend de v:
 par(mfrow=c(1,1))
-plot(Vvec,IAvec/N, type = "l") # fraction de la pop dans IA en fonction de la couverture vaccinale 
-plot(Vvec,(IAvec/N)/(1-Vvec), type = "l") # fraction de la pop non vaccinée dans IA en fonction de la couverture vaccinale 
-used_meth
+
+# fraction de la pop dans I en fonction de la couverture vaccinale 
+M <- max(Ivec, IAvec, IEvec)/N
+m <- min(Ivec, IAvec, IEvec)/N
+plot(Vvec,Ivec/N, type = "l", ylim = c(m,M)) 
+lines(Vvec, IAvec/N, col = 2)
+lines(Vvec, IEvec/N, col = 3)
+legend("topright", legend = c('I/N','IA/N', 'IE/N'), col = c(1,2,3), lty = c(1, 1, 1))
+
+# fraction de la pop non vaccinée dans I en fonction de la couverture vaccinale 
+plot(Vvec,(Ivec/N)/(1-Vvec), type = "l")
+lines(Vvec, (IAvec/N)/(1-Vvec), col = 2)
+lines(Vvec, (IEvec/N)/(1-Vvec), col = 3)
+legend("topleft", legend = c('(I/N)/(1-Vvec)','(IA/N)/(1-Vvec)', '(IE/N)/(1-Vvec)'), col = c(1,2,3), lty = c(1, 1, 1))
+
 
 # la fraction de la pop dans IA augmente avec la couvereture vaccinale -> il ne faudrait donc pas vacciner ??? C'est louche ! 
 # il y a peut-être un pb dans la conception du modèle 
 # dans SIRV sans les classes d'âge on a bien une décroissance de I avec l'augmentation de la couverture vaccinale
 # est-ce que lorqu'on vaccine à la naissance on reste immunisé pendant l'enfance puis BIM! quand on est adulte on est baisé ???
-# plot IE/N et (IA+IE)/N
+# plot IE/N et I/N
+# On a bien I=f(v) décroissante comme dans SIRV
 # comparer à SIRage 
+# Test avec différentes valeurs de mu
+# avec mu = 0 on devrais avoir les mêmes résultats que SIRage, ce n'est pas DU TOUT le cas ! -> revoir le modèle 
+
+
+
 
 # IA en fonction de la couverture vaccinale SIRVage2
 IAvec2 = matrix(0,21,1)
