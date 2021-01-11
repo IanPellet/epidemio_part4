@@ -44,7 +44,7 @@ to setup-turtles
   ask n-of sick-people turtles
     [ get-sick ]
   ask n-of vaccinated-people turtles
-    [ get-vaccine]
+    [ initial-vaccineted ]
 end
 
 to get-sick ;; turtle procedure
@@ -70,10 +70,20 @@ to become-recovered ;; turtle procedure
   set remaining-recovered recovered-duration
 end
 
+
+to initial-vaccineted
+  set susceptible? false
+  set sick? false
+  set vaccinated? true
+  set sick-time 0
+  set vaccinated-time 0
+  set remaining-recovered vaccine-duration
+end
+
 to get-vaccine
   if age < max-age-for-vaccine * 52 [
     if sick? = false [
-      if random 100 < vaccine-chance [
+      if random-float 100 < (vaccine-chance / 10 ) * 100[
          set susceptible? false
          set sick? false
          set vaccinated? true
@@ -223,7 +233,7 @@ duration
 duration
 0.0
 99.0
-66.0
+10.0
 1.0
 1
 weeks
@@ -324,7 +334,7 @@ number-people
 number-people
 10
 carrying-capacity
-137.0
+115.0
 1
 1
 NIL
@@ -393,7 +403,7 @@ vaccinated-people
 vaccinated-people
 0
 number-people
-21.0
+14.0
 1
 1
 NIL
@@ -408,7 +418,7 @@ sick-people
 sick-people
 0
 number-people
-12.0
+14.0
 1
 1
 NIL
@@ -423,7 +433,7 @@ vaccine-efficiency
 vaccine-efficiency
 0
 25
-8.0
+5.0
 1
 1
 years
@@ -437,23 +447,23 @@ SLIDER
 vaccine-chance
 vaccine-chance
 0
-100
-15.0
-1
+10
+0.6
+0.05
 1
 %
 HORIZONTAL
 
 SLIDER
 20
-200
-252
-233
+205
+225
+238
 max-age-for-vaccine
 max-age-for-vaccine
 0
 lifespan / 52
-18.0
+10.0
 1
 1
 years
