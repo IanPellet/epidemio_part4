@@ -1,9 +1,11 @@
 turtles-own
   [ sick?                ;; if true, the turtle is infectious
     vaccinated?
+    susceptible?
     remaining-recovered   ;; how many weeks of immunity the turtle has left
     vaccinated-time      ;;how long, in weeks, the turtle has been vaccinated
     sick-time            ;; how long, in weeks, the turtle has been infectious
+    still-sick-chance
     age ]                ;; how many weeks old the turtle is
 
 globals
@@ -38,8 +40,9 @@ to setup-turtles
       set remaining-recovered 0
       set vaccinated-time 0
       set size 1.5  ;; easier to see
+      set still-sick-chance 1
       get-healthy ]
-  ask n-of 20 turtles
+  ask n-of 10 turtles
     [ get-sick ]
   ask n-of 10 turtles
     [ get-vaccine]
@@ -47,10 +50,13 @@ end
 
 to get-sick ;; turtle procedure
   set sick? true
+  set susceptible? false
   set remaining-recovered 0
+  set vaccinated-time 0
 end
 
 to get-healthy ;; turtle procedure
+  set susceptible? true
   set sick? false
   set vaccinated? false
   set remaining-recovered 0
@@ -58,12 +64,14 @@ to get-healthy ;; turtle procedure
 end
 
 to become-recovered ;; turtle procedure
+  set susceptible? false
   set sick? false
   set sick-time 0
   set remaining-recovered recovered-duration
 end
 
 to get-vaccine
+  set susceptible? false
   set sick? false
   set vaccinated? true
   set sick-time 0
@@ -85,10 +93,8 @@ to go
   ask turtles [
     get-older
     move
-    if sick?
-      [ recover-or-die ]
-    ifelse sick?
-      [ infect ] [ reproduce ]
+    if sick? [ still-sick ]
+    ifelse sick? [ infect ] [ reproduce ]
     if vaccinated-time > vaccine-duration
       [get-healthy]
   ]
@@ -106,17 +112,10 @@ to update-global-variables
 end
 
 to update-display
-  ask turtles
-    [
-      if shape != turtle-shape
-        [ set shape turtle-shape ]
-
-      set color ifelse-value sick? [ red ]
-      [
-        ifelse-value recovered? [ blue] [ green ]
-      ]
-      if vaccinated? = true
-        [ set color yellow ]
+  ask turtles[
+      if shape != turtle-shape [ set shape turtle-shape ]
+      if vaccinated? = true [set color yellow ]
+    set color ifelse-value sick? [ red ][ ifelse-value vaccinated? = true [ yellow ] [ ifelse-value recovered? [blue] [green] ] ]
   ]
 end
 
@@ -139,17 +138,24 @@ to move ;; turtle procedure
 end
 
 ;; If a turtle is sick, it infects other turtles on the same patch.
-;; Immune turtles don't get sick.
+;; Immune and vaccinated turtles don't get sick.
 to infect ;; turtle procedure
-  ask other turtles-here with [vaccinated? = false][
-    ask other turtles-here with [ not sick? and not recovered?]
-      [ if random-float 100 < infectiousness
-        [ get-sick ] ]]
+  ask other turtles-here with [ susceptible? = true]
+    [ if random-float 100 < infectiousness
+      [ get-sick ] ]
 end
+
+to still-sick
+  if sick-time > duration
+    [ ifelse random 100 > still-sick-chance
+      [get-sick]
+      [recover-or-die] ]
+end
+
 
 ;; Once the turtle has been sick long enough, it
 ;; either recovers (and becomes immune) or it dies.
-to recover-or-die ;; turtle procedure
+to recover-or-die                                ;; turtle procedure
   if sick-time > duration                        ;; If the turtle has survived past the virus' duration, then
     [ ifelse random-float 100 < chance-recover   ;; either recover or die
       [ become-recovered ]
@@ -211,7 +217,7 @@ duration
 duration
 0.0
 99.0
-52.0
+66.0
 1.0
 1
 weeks
@@ -226,7 +232,7 @@ chance-recover
 chance-recover
 0.0
 99.0
-13.0
+99.0
 1.0
 1
 %
@@ -241,7 +247,7 @@ infectiousness
 infectiousness
 0.0
 99.0
-77.0
+99.0
 1.0
 1
 %
@@ -297,7 +303,7 @@ true
 true
 "" ""
 PENS
-"Susceptible" 1.0 0 -13840069 true "" "plot count turtles with [ not sick? and not recovered? ]"
+"Susceptible" 1.0 0 -13840069 true "" "plot count turtles with [ not sick? and not recovered?]"
 "Infectious" 1.0 0 -2674135 true "" "plot count turtles with [ sick? ]"
 "Recovered" 1.0 0 -13791810 true "" "plot count turtles with [ recovered? ]"
 "Vaccinated" 1.0 0 -1184463 true "" "plot count turtles with [ vaccinated? = true ]"
