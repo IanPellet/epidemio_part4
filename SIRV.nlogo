@@ -14,7 +14,6 @@ globals
     %vaccinated          ;; what % of the population is vaccinated
     lifespan             ;; the lifespan of a turtle
     chance-reproduce     ;; the probability of a turtle generating an offspring each tick
-    chance-vaccinated
     carrying-capacity    ;; the number of turtles that can be in the world at one time
     recovered-duration   ;; how many weeks immunity lasts
     vaccine-duration      ;; how many weeks vaccine lasts
@@ -51,6 +50,7 @@ end
 to get-sick ;; turtle procedure
   set sick? true
   set susceptible? false
+  set vaccinated? false
   set remaining-recovered 0
   set vaccinated-time 0
 end
@@ -71,27 +71,33 @@ to become-recovered ;; turtle procedure
 end
 
 to get-vaccine
-  set susceptible? false
-  set sick? false
-  set vaccinated? true
-  set sick-time 0
-  set vaccinated-time 0
-  set remaining-recovered vaccine-duration
+  if age < max-age-for-vaccine * 52 [
+    if sick? = false [
+      if random 100 < vaccine-chance [
+         set susceptible? false
+         set sick? false
+         set vaccinated? true
+         set sick-time 0
+         set vaccinated-time 0
+         set remaining-recovered vaccine-duration
+      ]
+    ]
+  ]
 end
 
 ;; This sets up basic constants of the model.
 to setup-constants
-  set lifespan 50 * 52      ;; 50 times 52 weeks = 50 years = 2600 weeks old
+  set lifespan 70 * 52      ;; 70 times 52 weeks = 50 years = 3 640 weeks old
   set carrying-capacity 300
   set chance-reproduce 1
   set recovered-duration 52
-  set chance-vaccinated 10
-  set vaccine-duration 10 * 52  ;; 10 times 52 weeks = 10 years = 520 weeks old
+  set vaccine-duration vaccine-efficiency * 52  ;; 10 times 52 weeks = 10 years = 520 weeks old
 end
 
 to go
   ask turtles [
     get-older
+    get-vaccine
     move
     if sick? [ still-sick ]
     ifelse sick? [ infect ] [ reproduce ]
@@ -241,7 +247,7 @@ HORIZONTAL
 SLIDER
 240
 60
-430
+435
 93
 infectiousness
 infectiousness
@@ -318,7 +324,7 @@ number-people
 number-people
 10
 carrying-capacity
-123.0
+137.0
 1
 1
 NIL
@@ -369,10 +375,10 @@ MONITOR
 11
 
 CHOOSER
+1040
 20
-200
-225
-245
+1245
+65
 turtle-shape
 turtle-shape
 "person" "circle"
@@ -386,8 +392,8 @@ SLIDER
 vaccinated-people
 vaccinated-people
 0
-100
-84.0
+number-people
+21.0
 1
 1
 NIL
@@ -401,11 +407,56 @@ SLIDER
 sick-people
 sick-people
 0
-100
-89.0
+number-people
+12.0
 1
 1
 NIL
+HORIZONTAL
+
+SLIDER
+240
+105
+435
+138
+vaccine-efficiency
+vaccine-efficiency
+0
+25
+8.0
+1
+1
+years
+HORIZONTAL
+
+SLIDER
+240
+150
+435
+183
+vaccine-chance
+vaccine-chance
+0
+100
+15.0
+1
+1
+%
+HORIZONTAL
+
+SLIDER
+20
+200
+252
+233
+max-age-for-vaccine
+max-age-for-vaccine
+0
+lifespan / 52
+18.0
+1
+1
+years
 HORIZONTAL
 
 @#$#@#$#@
