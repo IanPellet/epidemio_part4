@@ -4,7 +4,7 @@ function sol = SIR()
 % Paramètres du modèle
 N = 1e6 ;      % popultation totale
 m = 1/80 ;    % taux de mortalité/natalité, essperance de vie de 80ans
-v = 0.8 ;    % couverture vaccinale de 80%RUN_SEIR simulation of the SEIR model
+v = 0.0 ;    % couverture vaccinale de 80%RUN_SEIR simulation of the SEIR model
 g = 52/3 ;    % durée de l'infection 3semaines
 R0 = 6.5 ;      % taux de reproduction de base
 beta = R0*(m+g)/N ;   % taux d'infection S -> I
@@ -18,7 +18,7 @@ Ri = v*N ;
 % Vi = v*m*N;
 % times = seq(0, 2, 0.1);
 IC = [Si ; Ii ; Ri]; % seed a few exposed individuals
-tspan = [0:0.001:150]; % en années
+tspan = [0:0.001:200]; % en années
 
 % simulations
 options = odeset('RelTol', 1e-6, 'AbsTol', 1e-6);
