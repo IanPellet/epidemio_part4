@@ -2,21 +2,23 @@ turtles-own
   [ sick?                ;; if true, the turtle is infectious
     vaccinated?
     susceptible?
-    remaining-recovered   ;; how many weeks of immunity the turtle has left
-    vaccinated-time      ;;how long, in weeks, the turtle has been vaccinated
+    remaining-recovered  ;; how many weeks of immunity the turtle has left
+    vaccinated-time      ;; how long, in weeks, the turtle has been vaccinated
     sick-time            ;; how long, in weeks, the turtle has been infectious
-    still-sick-chance
+    weakness
     age ]                ;; how many weeks old the turtle is
 
 globals
-  [ %infected            ;; what % of the population is infectious
+  [ %susceptible         ;; what % of the population is susceptible
+    %infected            ;; what % of the population is infectious
     %recovered           ;; what % of the population is recovered
     %vaccinated          ;; what % of the population is vaccinated
     lifespan             ;; the lifespan of a turtle
+    mean-age
     chance-reproduce     ;; the probability of a turtle generating an offspring each tick
     carrying-capacity    ;; the number of turtles that can be in the world at one time
     recovered-duration   ;; how many weeks immunity lasts
-    vaccine-duration      ;; how many weeks vaccine lasts
+    vaccine-duration     ;; how many weeks vaccine lasts
 ]
 
 ;; The setup is divided into four procedures
@@ -34,17 +36,15 @@ end
 to setup-turtles
   create-turtles number-people
     [ setxy random-xcor random-ycor
-      set age random lifespan
+      set age random-normal (lifespan / 2) sqrt(lifespan / 4)
       set sick-time 0
       set remaining-recovered 0
       set vaccinated-time 0
       set size 1.5  ;; easier to see
-      set still-sick-chance 1
+      set weakness random-float 10
       get-healthy ]
   ask n-of sick-people turtles
     [ get-sick ]
-  ask n-of vaccinated-people turtles
-    [ initial-vaccineted ]
 end
 
 to get-sick ;; turtle procedure
@@ -61,6 +61,7 @@ to get-healthy ;; turtle procedure
   set vaccinated? false
   set remaining-recovered 0
   set sick-time 0
+  set vaccinated-time 0
 end
 
 to become-recovered ;; turtle procedure
@@ -70,26 +71,15 @@ to become-recovered ;; turtle procedure
   set remaining-recovered recovered-duration
 end
 
-
-to initial-vaccineted
-  set susceptible? false
-  set sick? false
-  set vaccinated? true
-  set sick-time 0
-  set vaccinated-time 0
-  set remaining-recovered vaccine-duration
-end
-
 to get-vaccine
-  if age < max-age-for-vaccine * 52 [
+  if age < max-age-for-vaccine * 365 [
     if sick? = false [
-      if random-float 100 < (vaccine-chance / 10 ) * 100[
+      if random-float 1000 < ( (vaccine-chance / 10 ) * 100 ) [
          set susceptible? false
          set sick? false
          set vaccinated? true
          set sick-time 0
          set vaccinated-time 0
-         set remaining-recovered vaccine-duration
       ]
     ]
   ]
@@ -97,33 +87,65 @@ end
 
 ;; This sets up basic constants of the model.
 to setup-constants
-  set lifespan 70 * 52      ;; 70 times 52 weeks = 50 years = 3 640 weeks old
+  set lifespan 80 * 365     ;; 80 times 365 days = 80 years
   set carrying-capacity 300
-  set chance-reproduce 1
-  set recovered-duration 52
-  set vaccine-duration vaccine-efficiency * 52  ;; 10 times 52 weeks = 10 years = 520 weeks old
+  set chance-reproduce 10
+  set recovered-duration 5 * 365 ;; 5 times 365 days = 5 years
+  set vaccine-duration vaccine-efficiency * 365  ;; 10 times 365 days = 10 years
 end
 
 to go
+  if all? turtles [ sick? = false]
+    [ stop ]
+
+  if all? turtles [ sick? = true]
+    [ stop ]
+
+  ask turtles with [sick? = true]
+    [ infect ]
+
+  ask turtles with [sick? = false]
+    [ if age > (15 * 365) and age < (60 * 365) [ reproduce ] ]
+
+  ask turtles with [sick-time >= duration]
+    [ifelse weakness > 2.5 [recover-or-die][get-sick]]
+
+  ask turtles with [susceptible? = true]
+   [ if vaccine? [get-vaccine] ]
+
+  ask turtles with [recovered?]
+    [ if remaining-recovered = 1 [ set susceptible? true] ]
+
+  ask turtles with [vaccinated-time >= vaccine-duration]
+    [get-healthy]
+
+  ask turtles with [ age > (70 * 365)]
+      [ maybe-die ]
+
   ask turtles [
-    get-older
-    get-vaccine
-    move
-    if sick? [ still-sick ]
-    ifelse sick? [ infect ] [ reproduce ]
-    if vaccinated-time > vaccine-duration
-      [get-healthy]
+   get-older
+   move
   ]
+
   update-global-variables
   update-display
   tick
 end
 
+
+to maybe-die
+  random-seed 23
+  if random-float 1 < (age / lifespan)
+    [ die ]
+end
+
 to update-global-variables
   if count turtles > 0
-    [ set %infected (count turtles with [ sick? ] / count turtles) * 100
+    [ set %susceptible (count turtles with [ susceptible? ] / count turtles) * 100
+      set %infected (count turtles with [ sick? ] / count turtles) * 100
       set %recovered (count turtles with [ recovered? ] / count turtles) * 100
       set %vaccinated (count turtles with [ vaccinated? = true ] / count turtles) * 100
+      set mean-age mean [age / 365] of turtles
   ]
 end
 
@@ -141,7 +163,7 @@ to get-older ;; turtle procedure
   ;; lifespan (set at 50 years in this model).
   set age age + 1
   if age > lifespan [ die ]
-  if recovered? [ set remaining-recovered remaining-recovered - 1 ]
+  if recovered? [ set remaining-recovered remaining-recovered - 1]
   if vaccinated? = true [ set vaccinated-time vaccinated-time + 1]
   if sick? [ set sick-time sick-time + 1 ]
 end
@@ -159,13 +181,6 @@ to infect ;; turtle procedure
   ask other turtles-here with [ susceptible? = true]
     [ if random-float 100 < infectiousness
       [ get-sick ] ]
-end
-
-to still-sick
-  if sick-time > duration
-    [ ifelse random 100 > still-sick-chance
-      [get-sick]
-      [recover-or-die] ]
 end
 
 
@@ -187,6 +202,7 @@ to reproduce
         lt 45 fd 1
         get-healthy ] ]
 end
+
 
 to-report recovered?
   report remaining-recovered > 0
@@ -226,14 +242,14 @@ ticks
 
 SLIDER
 20
-150
+105
 225
-183
+138
 duration
 duration
 0.0
 99.0
-10.0
+6.0
 1.0
 1
 weeks
@@ -248,7 +264,7 @@ chance-recover
 chance-recover
 0.0
 99.0
-97.0
+85.0
 1.0
 1
 %
@@ -263,7 +279,7 @@ infectiousness
 infectiousness
 0.0
 99.0
-98.0
+70.0
 1.0
 1
 %
@@ -309,10 +325,10 @@ PLOT
 445
 649
 Populations
-weeks
+days
 people
 0.0
-52.0
+365.0
 0.0
 200.0
 true
@@ -334,80 +350,65 @@ number-people
 number-people
 10
 carrying-capacity
-115.0
+120.0
 1
 1
 NIL
 HORIZONTAL
 
 MONITOR
-840
-19
-925
-64
+785
+20
+870
+65
 NIL
 %infected
-1
+3
 1
 11
 
 MONITOR
-935
-19
-1025
-64
+1115
+20
+1205
+65
 years
-ticks / 52
-1
+ticks / 365
+3
 1
 11
 
 MONITOR
-645
-19
-730
-64
+870
+20
+955
+65
 NIL
 %recovered
-1
+3
 1
 11
 
 MONITOR
-740
-19
-832
-64
+955
+20
+1047
+65
 %vaccinated
 %vaccinated
-5
+3
 1
 11
 
 CHOOSER
-1040
-20
-1245
-65
+240
+200
+435
+245
 turtle-shape
 turtle-shape
-"person" "circle"
+"person" "circle" "turtle"
 0
-
-SLIDER
-20
-105
-225
-138
-vaccinated-people
-vaccinated-people
-0
-number-people
-14.0
-1
-1
-NIL
-HORIZONTAL
 
 SLIDER
 20
@@ -418,7 +419,7 @@ sick-people
 sick-people
 0
 number-people
-14.0
+5.0
 1
 1
 NIL
@@ -433,7 +434,7 @@ vaccine-efficiency
 vaccine-efficiency
 0
 25
-5.0
+6.0
 1
 1
 years
@@ -447,27 +448,60 @@ SLIDER
 vaccine-chance
 vaccine-chance
 0
-10
-0.6
-0.05
+100
+15.0
+1
 1
 %
 HORIZONTAL
 
 SLIDER
 20
-205
+150
 225
-238
+183
 max-age-for-vaccine
 max-age-for-vaccine
 0
-lifespan / 52
+lifespan / 365
 10.0
 1
 1
 years
 HORIZONTAL
+
+SWITCH
+20
+210
+130
+243
+vaccine?
+vaccine?
+1
+1
+-1000
+
+MONITOR
+690
+20
+785
+65
+NIL
+%susceptible
+3
+1
+11
+
+MONITOR
+1205
+20
+1282
+65
+NIL
+mean-age
+3
+1
+11
 
 @#$#@#$#@
 @#$#@#$#@
