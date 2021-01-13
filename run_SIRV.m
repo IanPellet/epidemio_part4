@@ -2,34 +2,24 @@ function sol = run_SIRV()
 %UNTITLED2 Summary of this function goes here
 %   Detailed explanation goes here
 
-    function dydt = sirv(t,y,Z)
+    function dydt = sirv(~,y)
         % SIRV funcrion definition 
         
-        S = y(1); I = y(2); R = y(3); V = y(4);
-        
-        % Calcul de V(t - t_immun)
-        if t < t_immun
-            Vlag = v*m*N ; % condition initale pour V
-        else
-            Vlag = Z(4,t_immun) ; % valeur de V(t - t_immun)
-        end
-        
-        somme_dV1 = 0 ;
-        for i = 0:t_immun
-            if (t < (i+1))
-                somme_dV1 = somme_dV1 + (1-m-beta*I)^i * v*m*N ; % V(t-i-1) remplacé par V à l'équilibre
-            else
-                somme_dV1 = somme_dV1 + (1-m-beta)^i * Z(4,i+1) ; % Z(4,i) = V(t-i-1)
-            end
-        end        
-        %Vlag = 0; % V(t-timm)
+        S = y(1); I = y(2); R = y(3); V0 = y(4);
+
         % Équations
-        dydt = zeros(4,1);
-        dydt(1) = (1-v)*m*N - m*S - beta*I*S + (1-m-beta*I)^t_immun * Vlag ; % equation de S
-        %dydt(1) = (1-v)*m*N - m*S - beta*I*S  ; % equation de S
+        dydt = zeros(3+t_immun,1);
+        
+        % equation de S
+        dydt(1) = (1-v)*m*N - m*S - beta*I*S + (1-m-beta*I)*y(4+t_immun-1) ; % y(4+t_immun-1) = V_{t_immun - 1}
         dydt(2) = beta*S*I - m*I - g*I ; % equation de I
         dydt(3) = g*I - m*R ; % equation de R
-        dydt(4) = v*m*N + beta*I*somme_dV1 - V ; % equation de V
+        % equation de V
+        dydt(4) = v*m*N + beta*I*sum(y(4:(4+t_immun-1))) - V0 ; % sum(y(4:(t_immun-1))) = sum(Vi)
+        % équation de Vi
+        for i = 1:(t_immun-1) 
+            dydt(4+i) = (1-beta*I-m) * y(4 + (i-1)) ; % y(4 + (i-1)) = V_{i-1}
+        end 
         
         %disp(dydt)
       
@@ -53,13 +43,19 @@ Si = (1-v)*N-1  ;
 Ii = 1 ;
 Ri = 0 ;
 Vi = v*m*N;
-IC = [Si ; Ii ; Ri ; Vi]; % conditions initales
-tspan = [0, 200]; % en années
-lags = [1:200-t_immun];
+% conditions initales
+IC = ones(t_immun+3, 1)*Vi ;
+IC(1) = Si ;
+IC(2) = Ii ;
+IC(3) = Ri ;
+ 
+tspan = [0, 1000]; % en années
+%lags = [1:200-t_immun];
 % simulations
 %opts = ddeset('RelTol',1e-10,'AbsTol',1e-10);
 options = odeset('RelTol', 1e-6, 'AbsTol', 1e-6);
-sol = dde23(@sirv,lags,IC,tspan,options);
+%sol = dde23(@sirv,lags,IC,tspan,options);
+sol = ode45(@sirv,tspan,IC,options);
 
 % Affichage 
 f1 = figure(1); clf;
@@ -80,13 +76,17 @@ title('Évolution de R avec le modèle SIRV');
 xlabel('time t');
 ylabel('R(t)');
 
-f3 = figure(4); clf;
+f4 = figure(4); clf;
 plot(sol.x, sol.y(4,:));
 title('Évolution de V avec le modèle SIRV');
 xlabel('time t');
 ylabel('V(t)');
 
-
+figure(5); clf;
+semilogy(sol.x, sum(sol.y(1:(t_immun+3),:)));
+title('Évolution de N avec le modèle SIRV');
+xlabel('time t');
+ylabel('N(t)');
 
     
 
