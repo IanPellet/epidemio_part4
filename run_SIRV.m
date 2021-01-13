@@ -18,7 +18,7 @@ function sol = run_SIRV()
         dydt(4) = v*m*N + beta*I*sum(y(4:(4+t_immun-1))) - V0 ; % sum(y(4:(t_immun-1))) = sum(Vi)
         % équation de Vi
         for i = 1:(t_immun-1) 
-            dydt(4+i) = (1-beta*I-m) * y(4 + (i-1)) ; % y(4 + (i-1)) = V_{i-1}
+            dydt(4+i) = (1-beta*I-m) * y(4 + (i-1)) - y(4 + i) ; % y(4 + (i-1)) = V_{i-1}
         end 
         
         %disp(dydt)
@@ -49,13 +49,15 @@ IC(1) = Si ;
 IC(2) = Ii ;
 IC(3) = Ri ;
  
-tspan = [0, 1000]; % en années
+tspan = [0,5000]; % en années
 %lags = [1:200-t_immun];
 % simulations
 %opts = ddeset('RelTol',1e-10,'AbsTol',1e-10);
 options = odeset('RelTol', 1e-6, 'AbsTol', 1e-6);
 %sol = dde23(@sirv,lags,IC,tspan,options);
 sol = ode45(@sirv,tspan,IC,options);
+x = linspace(0,5000);
+y = deval(sol, x);
 
 % Affichage 
 f1 = figure(1); clf;
@@ -83,11 +85,17 @@ xlabel('time t');
 ylabel('V(t)');
 
 figure(5); clf;
-semilogy(sol.x, sum(sol.y(1:(t_immun+3),:)));
+plot(sol.x, sum(sol.y(1:(t_immun+3),:)));
 title('Évolution de N avec le modèle SIRV');
 xlabel('time t');
 ylabel('N(t)');
 
+figure(6); clf;
+plot(x,y(5:13,:));
+title('Évolution de N avec le modèle SIRV');
+xlabel('time t');
+ylabel('dVi(t)');
+legend;
     
 
 end
