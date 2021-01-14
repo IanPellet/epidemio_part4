@@ -2,11 +2,11 @@ turtles-own
   [ sick?                ;; if true, the turtle is infectious
     vaccinated?
     susceptible?
-    remaining-recovered  ;; how many weeks of immunity the turtle has left
-    vaccinated-time      ;; how long, in weeks, the turtle has been vaccinated
-    sick-time            ;; how long, in weeks, the turtle has been infectious
+    remaining-recovered  ;; how many days of immunity the turtle has left
+    vaccinated-time      ;; how long, in days, the turtle has been vaccinated
+    sick-time            ;; how long, in days, the turtle has been infectious
     weakness
-    age ]                ;; how many weeks old the turtle is
+    age ]                ;; how many days old the turtle is
 
 globals
   [ %susceptible         ;; what % of the population is susceptible
@@ -17,8 +17,8 @@ globals
     mean-age
     chance-reproduce     ;; the probability of a turtle generating an offspring each tick
     carrying-capacity    ;; the number of turtles that can be in the world at one time
-    recovered-duration   ;; how many weeks immunity lasts
-    vaccine-duration     ;; how many weeks vaccine lasts
+    recovered-duration   ;; how many days immunity lasts
+    vaccine-duration     ;; how many days vaccine lasts
 ]
 
 ;; The setup is divided into four procedures
@@ -89,7 +89,7 @@ end
 to setup-constants
   set lifespan 80 * 365     ;; 80 times 365 days = 80 years
   set carrying-capacity 300
-  set chance-reproduce 10
+  set chance-reproduce 1
   set recovered-duration 5 * 365 ;; 5 times 365 days = 5 years
   set vaccine-duration vaccine-efficiency * 365  ;; 10 times 365 days = 10 years
 end
@@ -196,7 +196,7 @@ end
 ;; If there are less turtles than the carrying-capacity
 ;; then turtles can reproduce.
 to reproduce
-  if count turtles < carrying-capacity and random-float 100 < chance-reproduce
+  if count turtles < carrying-capacity and random-float 5000 < chance-reproduce
     [ hatch 1
       [ set age 1
         lt 45 fd 1
@@ -214,13 +214,13 @@ to startup
 end
 @#$#@#$#@
 GRAPHICS-WINDOW
-465
-80
-1357
-647
+455
+86
+1158
+640
 -1
 -1
-13.61
+10.7
 1
 10
 1
@@ -232,8 +232,8 @@ GRAPHICS-WINDOW
 1
 -32
 32
--20
-20
+-25
+25
 1
 1
 1
@@ -241,25 +241,25 @@ ticks
 45.0
 
 SLIDER
-20
-105
-225
-138
+15
+95
+220
+128
 duration
 duration
 0.0
 99.0
-6.0
+14.0
 1.0
 1
-weeks
+days
 HORIZONTAL
 
 SLIDER
-240
-20
-434
-53
+235
+10
+429
+43
 chance-recover
 chance-recover
 0.0
@@ -271,10 +271,10 @@ chance-recover
 HORIZONTAL
 
 SLIDER
-240
-60
-435
-93
+235
+50
+430
+83
 infectiousness
 infectiousness
 0.0
@@ -286,10 +286,10 @@ infectiousness
 HORIZONTAL
 
 BUTTON
-480
-24
-550
-59
+15
+245
+85
+280
 NIL
 setup
 NIL
@@ -303,10 +303,10 @@ NIL
 1
 
 BUTTON
-556
-24
-627
-60
+91
+245
+162
+281
 NIL
 go
 T
@@ -321,9 +321,9 @@ NIL
 
 PLOT
 15
-304
-445
-649
+340
+430
+640
 Populations
 days
 people
@@ -339,13 +339,12 @@ PENS
 "Infectious" 1.0 0 -2674135 true "" "plot count turtles with [ sick? ]"
 "Recovered" 1.0 0 -13791810 true "" "plot count turtles with [ recovered? ]"
 "Vaccinated" 1.0 0 -1184463 true "" "plot count turtles with [ vaccinated? = true ]"
-"Total" 1.0 0 -1664597 true "" "plot count turtles"
 
 SLIDER
-20
-18
-225
-51
+15
+8
+220
+41
 number-people
 number-people
 10
@@ -357,10 +356,10 @@ NIL
 HORIZONTAL
 
 MONITOR
-785
-20
-870
-65
+550
+25
+635
+70
 NIL
 %infected
 3
@@ -368,10 +367,10 @@ NIL
 11
 
 MONITOR
-1115
-20
-1205
-65
+835
+25
+925
+70
 years
 ticks / 365
 3
@@ -379,10 +378,10 @@ ticks / 365
 11
 
 MONITOR
-870
-20
-955
-65
+635
+25
+720
+70
 NIL
 %recovered
 3
@@ -390,10 +389,10 @@ NIL
 11
 
 MONITOR
-955
-20
-1047
-65
+720
+25
+812
+70
 %vaccinated
 %vaccinated
 3
@@ -401,35 +400,35 @@ MONITOR
 11
 
 CHOOSER
-240
-200
-435
-245
+235
+190
+430
+235
 turtle-shape
 turtle-shape
 "person" "circle" "turtle"
 0
 
 SLIDER
-20
-60
-225
-93
+15
+50
+220
+83
 sick-people
 sick-people
 0
 number-people
-5.0
+10.0
 1
 1
 NIL
 HORIZONTAL
 
 SLIDER
-240
-105
-435
-138
+235
+95
+430
+128
 vaccine-efficiency
 vaccine-efficiency
 0
@@ -441,25 +440,25 @@ years
 HORIZONTAL
 
 SLIDER
-240
-150
-435
-183
+235
+140
+430
+173
 vaccine-chance
 vaccine-chance
 0
 100
-15.0
+20.0
 1
 1
 %
 HORIZONTAL
 
 SLIDER
-20
-150
-225
-183
+15
+140
+220
+173
 max-age-for-vaccine
 max-age-for-vaccine
 0
@@ -471,21 +470,21 @@ years
 HORIZONTAL
 
 SWITCH
-20
-210
-130
-243
+15
+200
+125
+233
 vaccine?
 vaccine?
-1
+0
 1
 -1000
 
 MONITOR
-690
-20
-785
-65
+455
+25
+550
+70
 NIL
 %susceptible
 3
@@ -493,17 +492,48 @@ NIL
 11
 
 MONITOR
-1205
-20
-1282
-65
+925
+25
+1002
+70
 NIL
 mean-age
 3
 1
 11
 
+MONITOR
+1000
+25
+1072
+70
+Total pop
+count turtles
+3
+1
+11
+
 @#$#@#$#@
+\begin{itemize}
+    \item [$\bullet$] \textbf{remaining-recovered} : Représente le nombre de jours passés depuis la guérison de la personne. Pendant cette période où la personne est guérie du virus, elle a une certaine immunité contre celui-ci. Cette immunité n'est pas définitive et dès que cette période atteint son maximum ( variable \textbf{recovered-duration} ) la personne redevient susceptible ;
+    \item [$\bullet$] \textbf{sick-time} : Représente la durée depuis laquelle la personne a contracté le virus. Cette durée s'exprime en jour, commence à $0$ et finie lorsque \textbf{sick-time $=$ duration} ;
+    \item [$\bullet$] \textbf{duration} : Représente la durée pendant laquelle une personne est malade et infectieuse, sa valeurs est arbitraire car laissée au choix de l'utilisateur via le curseur;
+    \item [$\bullet$] \textbf{vaccinated-time} : Représente le nombre de jours passés depuis que la personne à reçu le vaccin. Pendant cette période où la personne invulnérable du virus car vaccinée. Cette invulnérabilité n'est pas définitive et dès que cette période atteint son maximum ( variable \textbf{vaccine-duration } ) la personne redevient susceptible ;
+    \item [$\bullet$] \textbf{vaccinae-duration} : Cette variable représente la durée en années pendant laquelle le vaccin est efficace contre le virus, sa valeur est laissée au choix à l'utilisateur dans l'interface via le curseur \textbf{vaccine-efficiency} ; 
+    \item [$\bullet$] \textbf{carrying-capacity} : le nombre d'individus qui peuvent se trouver dans le monde à un moment donné, lorsqu'elle est atteinte les individus ne peuvent plus se reproduire. ;
+    \item [$\bullet$] \textbf{lifespan } : Représente l'espérance de vie des individus, elle est fixée à $80$ ans ;
+    \item [$\bullet$] \textbf{chance-reproduce } : Probabilité qu'une tortue se reproduise à chaque tour, fixée à $\frac{1}{1000}$ (au delà on observe une reproduction dégénérée des individus) ;
+    \item [$\bullet$] \textbf{weakness} : Désigne la fragilité d'un individu. C'est un flottant (entre 1 et 10), définie aléatoirement pour chaque individu. Il accentue le fait que certains individus sont plus vulnérables que d'autres et que le temps qu'ils doivent mettre pour guérir du virus sera plus long que la normale ( définie sur \textbf{duration}); 
+    \item [$\bullet$] \textbf{max-age-for-vaccine} : Désigne l'âge maximal après lequel il n'est plus possible de recevoir le vaccin. Sa valeur en années est laissée au choix à l'utilisateur; 
+    \item [$\bullet$] \textbf{vaccine-chance} : Cette variable est peut-être la variable la plus "bricolée" du modèle, elle permet de maintenir une certaine stabilité dans le comportement de celui-ci. Biologiquement elle représenterait le taux d'efficacité du vaccin ainsi que le pourcentage de la population ayant reçu le vaccin. Elle est laissé au choix à l'utilisateur, mais par défaut il vaut mieux la laisser sur une valeur faible ( comme $2\%$) pour ne pas dégénérer le modèle. 
+    \item [$\bullet$] \textbf{infectiousness} : Probabilité d'infecter un autre individu en cas de contact
+    \item [$\bullet$] \textbf{change-recover} : Une fois la période infectieuse passée il y $3$ possibilité : 
+        \begin{enumerate}
+            \item Si la variable \textbf{weakness} de la personne est trop faible, celle-ci redevient malade à nouveau ( sa période infectieuse est multipliée par $2$ ;
+            \item Si la probabilité \textbf{chance-recover} est assez élevée la personne devient saine et guérie avec une période d'immunité \textbf{recovered-duration} ;
+            \item Sinon elle meurt. 
+        \end{enumerate}
+\end{itemize}s
 @#$#@#$#@
 default
 true
