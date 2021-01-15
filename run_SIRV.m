@@ -92,7 +92,7 @@ ylabel('N(t)');
 
 figure(6); clf;
 plot(x,y(5:13,:));
-title('Évolution de N avec le modèle SIRV');
+title('Évolution de Vi avec le modèle SIRV');
 xlabel('time t');
 ylabel('dVi(t)');
 legend;
